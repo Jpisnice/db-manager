@@ -2,6 +2,7 @@ use serde::{Serialize, Deserialize};
 use std::path::PathBuf;
 use std::collections::HashMap;
 
+#[derive(Serialize, Deserialize, Debug)]
 enum DbType {
     POSTGRESS,
     CHROMA,

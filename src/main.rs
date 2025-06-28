@@ -1,5 +1,4 @@
 mod database;
-use crate::database::DbType;
 use crossterm::event::{self, Event};
 use ratatui::{text::Text, Frame};
 
