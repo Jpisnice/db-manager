@@ -57,6 +57,8 @@ impl AppConfig {
             db_type,
             container_id,
             encrypted_credentials: encrypted_config,
+            nonce: vec![], // Placeholder, should be set by encryption
+            created_at: chrono::Utc::now(),
             // ... other fields
         });
         
