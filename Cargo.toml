@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+anyhow = "1.0.98"
+bollard = "0.19.1"
 chrono = { version = "0.4.41", features = ["serde"] }
 crossterm = "0.29.0"
 ratatui = "0.29.0"

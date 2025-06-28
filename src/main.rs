@@ -1,4 +1,6 @@
 mod database;
+mod docker;
+mod credentials;
 use crossterm::event::{self, Event};
 use ratatui::{text::Text, Frame};
 
