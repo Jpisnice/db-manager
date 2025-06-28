@@ -1,5 +1,4 @@
 use serde::{Serialize, Deserialize};
-use std::path::PathBuf;
 use std::collections::HashMap;
 use crate::database::{DbType};
 use crate::docker::DockerManager;
@@ -23,15 +22,27 @@ struct EncryptedDbConfig {
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-struct DbCredentials {
-    username: String,
-    password: String,
-    database: String,
-    port: u16,
-    root_password: Option<String>, // For MySQL
+pub struct DbCredentials {
+    pub username: String,
+    pub password: String,
+    pub database: String,
+    pub port: u16,
+    pub root_password: Option<String>, // For MySQL
 }
 
 impl AppConfig {
+    fn encrypt_credentials(&self, credentials: &DbCredentials, _passphrase: &str) -> Result<Vec<u8>, anyhow::Error> {
+        // Placeholder implementation - in a real app you'd use proper encryption
+        let serialized = serde_json::to_string(credentials)?;
+        Ok(serialized.into_bytes())
+    }
+
+    fn save(&self) -> Result<(), anyhow::Error> {
+        // Placeholder implementation - in a real app you'd save to a file
+        println!("Saving configuration...");
+        Ok(())
+    }
+
     async fn create_database(
         &mut self,
         name: String,
@@ -52,14 +63,21 @@ impl AppConfig {
         // Encrypt and store credentials
         let encrypted_config = self.encrypt_credentials(&credentials, passphrase)?;
         
+        // Convert string to DbType enum
+        let db_type_enum = match db_type.to_lowercase().as_str() {
+            "postgres" => DbType::Postgres,
+            "mysql" => DbType::MySQL,
+            "redis" => DbType::Redis,
+            _ => return Err(anyhow::anyhow!("Unsupported database type: {}", db_type)),
+        };
+        
         self.databases.insert(name.clone(), EncryptedDbConfig {
             name: name.clone(),
-            db_type,
+            db_type: db_type_enum,
             container_id,
             encrypted_credentials: encrypted_config,
             nonce: vec![], // Placeholder, should be set by encryption
             created_at: chrono::Utc::now(),
-            // ... other fields
         });
         
         self.save()?;

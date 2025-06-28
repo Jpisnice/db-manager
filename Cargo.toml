@@ -4,10 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+futures-util = "0.3"
 anyhow = "1.0.98"
 chrono = { version = "0.4.41", features = ["serde"] }
 crossterm = "0.29.0"
 ratatui = "0.29.0"
 serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0"
 shiplift = "0.7.0"
 tokio = "1.45.1"
