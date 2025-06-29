@@ -170,15 +170,6 @@ RUST_LOG=debug cargo run
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## Roadmap
-
-- [ ] **Enhanced TUI**: More interactive database management features
-- [ ] **Database Migrations**: Built-in migration support
-- [ ] **Backup/Restore**: Automated backup and restore functionality
-- [ ] **Monitoring**: Real-time database metrics and monitoring
-- [ ] **Custom Templates**: User-defined database templates
-- [ ] **Clustering**: Multi-container database cluster support
-- [ ] **Cloud Integration**: Support for cloud database providers
 
 ## Security Considerations
 
