@@ -12,4 +12,12 @@ ratatui = "0.29.0"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0"
 shiplift = "0.7.0"
-tokio = "1.45.1"
+tokio = { version = "1.45.1", features = ["full"] }
+# Encryption and security
+chacha20poly1305 = "0.8"
+scrypt = "0.8"
+rand = "0.8"
+base64 = "0.13"
+# File operations
+dirs = "4.0"
+directories = "4.0"

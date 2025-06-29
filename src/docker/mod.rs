@@ -1,17 +1,8 @@
+use crate::credentials::DbCredentials;
+use crate::database::{get_db_templates, DbTemplate};
 use futures_util::StreamExt;
 use shiplift::{ContainerOptions, Docker, PullOptions};
 use std::collections::HashMap;
-
-// Import the DbCredentials type from credentials module
-use crate::credentials::DbCredentials;
-
-#[derive(Debug, Clone)]
-pub struct DbTemplate {
-    pub image: String,
-    pub default_port: u16,
-    pub env_vars: HashMap<String, String>,
-    pub volumes: Vec<String>,
-}
 
 pub struct DockerManager {
     docker: Docker,
@@ -74,24 +65,20 @@ impl DockerManager {
 
         let mut opts = ContainerOptions::builder(image);
         opts.name(name);
-        
+
         if !env_vars.is_empty() {
             opts.env(env_refs);
         }
-        
+
         for (container_port, host_port) in parsed_ports {
             opts.expose(container_port, "tcp", host_port);
         }
-        
+
         if !volumes.is_empty() {
             opts.volumes(volume_refs);
         }
 
-        let container = self
-            .docker
-            .containers()
-            .create(&opts.build())
-            .await?;
+        let container = self.docker.containers().create(&opts.build()).await?;
 
         println!("✓ Container '{}' created with ID: {}", name, container.id);
         Ok(container.id)
@@ -138,7 +125,10 @@ impl DockerManager {
         db_type: &str,
         credentials: &DbCredentials,
     ) -> Result<String, anyhow::Error> {
-        let template = get_db_template(db_type)?;
+        let templates = get_db_templates();
+        let template = templates
+            .get(db_type.to_lowercase().as_str())
+            .ok_or_else(|| anyhow::anyhow!("Unsupported database type: {}", db_type))?;
 
         // Pull image
         self.pull_image(&template.image).await?;
@@ -149,10 +139,7 @@ impl DockerManager {
         // Build port mapping
         let mut port_mappings = HashMap::new();
         let container_port_key = template.default_port.to_string();
-        port_mappings.insert(
-            container_port_key,
-            credentials.port.to_string(),
-        );
+        port_mappings.insert(container_port_key, credentials.port.to_string());
 
         // Build volumes
         let volumes = template
@@ -173,48 +160,7 @@ impl DockerManager {
     }
 }
 
-fn get_db_template(db_type: &str) -> Result<DbTemplate, anyhow::Error> {
-    match db_type.to_lowercase().as_str() {
-        "mysql" => Ok(DbTemplate {
-            image: "mysql:8.0".to_string(),
-            default_port: 3306,
-            env_vars: {
-                let mut env = HashMap::new();
-                env.insert("MYSQL_DATABASE".to_string(), "{database}".to_string());
-                env.insert("MYSQL_USER".to_string(), "{username}".to_string());
-                env.insert("MYSQL_PASSWORD".to_string(), "{password}".to_string());
-                env.insert("MYSQL_ROOT_PASSWORD".to_string(), "{root_password}".to_string());
-                env
-            },
-            volumes: vec!["{name}_data:/var/lib/mysql".to_string()],
-        }),
-        "postgres" => Ok(DbTemplate {
-            image: "postgres:15".to_string(),
-            default_port: 5432,
-            env_vars: {
-                let mut env = HashMap::new();
-                env.insert("POSTGRES_DB".to_string(), "{database}".to_string());
-                env.insert("POSTGRES_USER".to_string(), "{username}".to_string());
-                env.insert("POSTGRES_PASSWORD".to_string(), "{password}".to_string());
-                env
-            },
-            volumes: vec!["{name}_data:/var/lib/postgresql/data".to_string()],
-        }),
-        "redis" => Ok(DbTemplate {
-            image: "redis:7-alpine".to_string(),
-            default_port: 6379,
-            env_vars: HashMap::new(),
-            volumes: vec!["{name}_data:/data".to_string()],
-        }),
-        _ => Err(anyhow::anyhow!("Unsupported database type: {}", db_type)),
-    }
-}
-
-fn build_env_vars(
-    template: &DbTemplate,
-    name: &str,
-    credentials: &DbCredentials,
-) -> Vec<String> {
+fn build_env_vars(template: &DbTemplate, name: &str, credentials: &DbCredentials) -> Vec<String> {
     template
         .env_vars
         .iter()
